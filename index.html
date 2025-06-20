@@ -282,22 +282,23 @@
         background-color: var(--accent-blue);
         z-index: 3;
         box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+        transition: all 0.4s ease-out;
       }
       #progress-bar-orange {
         background-color: var(--accent-orange);
         z-index: 2;
         box-shadow: 0 0 8px rgba(249, 115, 22, 0.6);
+        transition: all 0.4s ease-out;
       }
       #progress-bar-gold {
         background-color: var(--accent-gold);
         z-index: 1;
         box-shadow: 0 0 8px rgba(234, 179, 8, 0.6);
+        transition: all 0.4s ease-out;
       }
 
-      /* Premium Tier Progress Bars */
-      .progress-bar-container.tier-silver #progress-bar-blue,
-      .progress-bar-container.tier-silver #progress-bar-orange,
-      .progress-bar-container.tier-silver #progress-bar-gold {
+      /* Segment-Specific Premium Styling */
+      #progress-bar-blue.segment-premium {
         background: linear-gradient(90deg, var(--tier-silver-primary), #10b981);
         box-shadow: 0 0 20px rgba(34, 197, 94, 0.8),
           0 0 40px rgba(34, 197, 94, 0.4),
@@ -305,9 +306,7 @@
         animation: silverGlow 2s ease-in-out infinite alternate;
       }
 
-      .progress-bar-container.tier-gold #progress-bar-blue,
-      .progress-bar-container.tier-gold #progress-bar-orange,
-      .progress-bar-container.tier-gold #progress-bar-gold {
+      #progress-bar-orange.segment-premium {
         background: linear-gradient(90deg, var(--tier-gold-primary), #f59e0b);
         box-shadow: 0 0 20px rgba(234, 179, 8, 0.8),
           0 0 40px rgba(234, 179, 8, 0.4),
@@ -315,9 +314,7 @@
         animation: goldGlow 2s ease-in-out infinite alternate;
       }
 
-      .progress-bar-container.tier-platinum #progress-bar-blue,
-      .progress-bar-container.tier-platinum #progress-bar-orange,
-      .progress-bar-container.tier-platinum #progress-bar-gold {
+      #progress-bar-gold.segment-premium {
         background: linear-gradient(
           90deg,
           var(--tier-platinum-primary),
@@ -1297,25 +1294,23 @@
         // --- Update Segmented Progress Bar ---
         const [ms1, ms2, ms3] = [33.33, 66.67, 100];
 
-        // Determine highest achieved tier
-        const progressBarContainer = document.querySelector(
-          ".progress-bar-container"
-        );
-        progressBarContainer.classList.remove(
-          "tier-silver",
-          "tier-gold",
-          "tier-platinum"
-        );
+        // Reset all segment premium classes
+        progressBarBlue.classList.remove("segment-premium");
+        progressBarOrange.classList.remove("segment-premium");
+        progressBarGold.classList.remove("segment-premium");
 
+        // Apply premium styling to completed segments
+        if (overallPercentage >= ms1) {
+          // JS Silver achieved - make blue segment premium (green)
+          progressBarBlue.classList.add("segment-premium");
+        }
+        if (overallPercentage >= ms2) {
+          // JS Gold achieved - make orange segment premium (gold)
+          progressBarOrange.classList.add("segment-premium");
+        }
         if (overallPercentage >= ms3) {
-          // AsyncJS Platinum achieved
-          progressBarContainer.classList.add("tier-platinum");
-        } else if (overallPercentage >= ms2) {
-          // JS Gold achieved
-          progressBarContainer.classList.add("tier-gold");
-        } else if (overallPercentage >= ms1) {
-          // JS Silver achieved
-          progressBarContainer.classList.add("tier-silver");
+          // AsyncJS Platinum achieved - make gold segment premium (platinum)
+          progressBarGold.classList.add("segment-premium");
         }
 
         // Blue segment: 0% to 33.33% (first third)
