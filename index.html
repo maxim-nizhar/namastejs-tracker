@@ -19,12 +19,13 @@
         --border-dark: #374151; /* Tailwind gray-700 */
         --text-main: #f9fafb; /* Tailwind gray-50 */
         --text-secondary: #9ca3af; /* Tailwind gray-400 */
-        --accent-blue: #3b82f6; /* Tailwind blue-500 */
+        --accent-blue: #3b82f6; /* First segment: Blue for 0-33% */
         --accent-green: #22c55e; /* Tailwind green-500 */
-        --accent-gold: #f59e0b; /* Tailwind amber-500 */
-        --accent-silver-to-gold: #fbbf24; /* Different orange for silver-to-gold path */
-        --accent-platinum: #c7d2fe; /* Lighter platinum blue */
-        --accent-platinum-pin: #8b5cf6; /* Purple-blue for platinum pin */
+        --accent-orange: #f97316; /* Second segment: Orange for 33-67% */
+        --accent-gold: #eab308; /* Third segment: Gold for 67-100% */
+        --accent-platinum: #e0e7ff; /* Platinum crystal blue - lighter */
+        --accent-platinum-pin: #3730a3; /* Deep indigo for platinum pin */
+        --accent-platinum-glow: #6d28d9; /* Purple glow for platinum */
         --accent-red: #ef4444; /* Tailwind red-500 */
       }
 
@@ -241,11 +242,12 @@
 
       /* --- Gamification: Progress Bar & Milestones --- */
       .progress-section {
-        padding-bottom: 1.5rem;
+        padding-bottom: 3rem; /* Increased from 1.5rem to push cards down */
+        margin-bottom: 2rem; /* Additional margin for more separation */
       }
       .progress-bar-container {
         position: relative;
-        margin-top: 4rem;
+        margin-top: 2rem; /* Reduced from 4rem to prevent collision */
         padding: 0 1rem;
         width: 100%;
         max-width: 100%;
@@ -270,15 +272,15 @@
       }
       #progress-bar-blue {
         background-color: var(--accent-blue);
-        z-index: 1;
+        z-index: 3;
       }
-      #progress-bar-green {
-        background-color: var(--accent-silver-to-gold);
+      #progress-bar-orange {
+        background-color: var(--accent-orange);
         z-index: 2;
       }
       #progress-bar-gold {
         background-color: var(--accent-gold);
-        z-index: 3;
+        z-index: 1;
       }
 
       #milestone-markers {
@@ -305,7 +307,14 @@
       .milestone .icon-container {
         width: 20px;
         height: 28px;
-        color: var(--accent-red);
+        color: var(
+          --text-secondary
+        ); /* Default gray color for locked milestones */
+      }
+      .milestone.platinum .icon-container {
+        color: var(
+          --accent-platinum-pin
+        ); /* Platinum always has distinct color */
       }
       .milestone-label {
         position: absolute;
@@ -326,6 +335,13 @@
         min-width: max-content;
         z-index: 20;
       }
+      .milestone.platinum .milestone-label {
+        color: var(--accent-platinum);
+        background-color: rgba(55, 48, 163, 0.15);
+        border: 1px solid var(--accent-platinum-pin);
+        font-weight: 700;
+        backdrop-filter: blur(8px);
+      }
 
       /* Special positioning for the last milestone to prevent cutoff */
       .milestone:last-child .milestone-label {
@@ -341,10 +357,16 @@
         background-color: rgba(34, 197, 94, 0.1);
         border: 1px solid var(--accent-green);
       }
+      .milestone.unlocked .icon-container {
+        color: var(--accent-green);
+      }
       .milestone.platinum.unlocked .milestone-label {
         color: var(--accent-platinum);
-        background-color: rgba(139, 92, 246, 0.1);
+        background-color: rgba(55, 48, 163, 0.1);
         border: 1px solid var(--accent-platinum-pin);
+      }
+      .milestone.platinum.unlocked .icon-container {
+        color: var(--accent-platinum-pin);
       }
 
       @keyframes glow {
@@ -357,12 +379,28 @@
         }
       }
       @keyframes glow-platinum {
-        0%,
-        100% {
-          filter: drop-shadow(0 0 3px rgba(165, 180, 252, 0));
+        0% {
+          filter: drop-shadow(0 0 2px rgba(109, 40, 217, 0.3));
+          transform: translateX(-50%) scale(1);
+        }
+        25% {
+          filter: drop-shadow(0 0 12px rgba(109, 40, 217, 0.8))
+            drop-shadow(0 0 6px rgba(224, 231, 255, 0.4));
+          transform: translateX(-50%) scale(1.05);
         }
         50% {
-          filter: drop-shadow(0 0 4px rgba(165, 180, 252, 0.7));
+          filter: drop-shadow(0 0 20px rgba(109, 40, 217, 1))
+            drop-shadow(0 0 40px rgba(224, 231, 255, 0.7));
+          transform: translateX(-50%) scale(1.1);
+        }
+        75% {
+          filter: drop-shadow(0 0 12px rgba(109, 40, 217, 0.8))
+            drop-shadow(0 0 6px rgba(224, 231, 255, 0.4));
+          transform: translateX(-50%) scale(1.05);
+        }
+        100% {
+          filter: drop-shadow(0 0 2px rgba(109, 40, 217, 0.3));
+          transform: translateX(-50%) scale(1);
         }
       }
 
@@ -377,7 +415,10 @@
         color: var(--accent-platinum-pin);
       }
       .milestone.platinum.next-milestone {
-        animation: glow-platinum 2s infinite ease-in-out;
+        animation: glow-platinum 1.5s infinite ease-in-out;
+      }
+      .milestone.platinum {
+        filter: drop-shadow(0 0 3px rgba(109, 40, 217, 0.2));
       }
 
       /* Responsive milestone positioning */
@@ -599,40 +640,47 @@
   </head>
   <body class="p-2 sm:p-4 md:p-6 lg:p-8">
     <div id="app-root">
-      <div class="app-header max-w-screen-2xl mx-auto w-full px-2">
-        <header
-          class="flex justify-between items-center flex-wrap gap-2 sm:gap-4 mb-6"
+      <div class="app-header max-w-screen-2xl mx-auto w-full px-2 mb-8">
+        <div
+          class="header-content bg-gray-800/30 backdrop-blur-sm rounded-lg p-4 border border-gray-700/50"
         >
-          <h1
-            class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-50 break-words"
+          <div
+            class="flex justify-between items-center flex-wrap gap-2 sm:gap-4"
           >
-            Namaste JavaScript Tracker
-          </h1>
-          <div class="flex items-center gap-1 sm:gap-2 flex-wrap">
-            <button
-              id="todo-panel-button"
-              class="control-button text-xs sm:text-sm"
+            <h1
+              class="text-lg sm:text-xl md:text-2xl font-bold text-gray-50 break-words"
             >
-              Notepad
-            </button>
-            <button
-              id="toggle-fold-button"
-              class="control-button text-xs sm:text-sm"
-            >
-              Toggle All
-            </button>
-            <button id="reset-button" class="control-button text-xs sm:text-sm">
-              Reset
-            </button>
+              Namaste JavaScript Tracker
+            </h1>
+            <div class="flex items-center gap-1 sm:gap-2 flex-wrap">
+              <button
+                id="todo-panel-button"
+                class="control-button text-xs sm:text-sm"
+              >
+                Notepad
+              </button>
+              <button
+                id="toggle-fold-button"
+                class="control-button text-xs sm:text-sm"
+              >
+                Toggle All
+              </button>
+              <button
+                id="reset-button"
+                class="control-button text-xs sm:text-sm"
+              >
+                Reset
+              </button>
+            </div>
           </div>
-        </header>
+        </div>
 
-        <div class="progress-section mb-4">
+        <div class="progress-section mb-2">
           <div class="progress-bar-container">
             <div class="global-progress-bar-bg">
-              <div id="progress-bar-gold" class="progress-bar-segment"></div>
-              <div id="progress-bar-green" class="progress-bar-segment"></div>
               <div id="progress-bar-blue" class="progress-bar-segment"></div>
+              <div id="progress-bar-orange" class="progress-bar-segment"></div>
+              <div id="progress-bar-gold" class="progress-bar-segment"></div>
             </div>
             <div id="milestone-markers"></div>
           </div>
@@ -838,7 +886,7 @@
       const progressPercentageEl = getEl("progress-percentage");
 
       const progressBarBlue = getEl("progress-bar-blue");
-      const progressBarGreen = getEl("progress-bar-green");
+      const progressBarOrange = getEl("progress-bar-orange");
       const progressBarGold = getEl("progress-bar-gold");
 
       const milestoneMarkersContainer = getEl("milestone-markers");
@@ -1030,24 +1078,29 @@
         // --- Update Segmented Progress Bar ---
         const [ms1, ms2, ms3] = [33.33, 66.67, 100];
 
-        // Blue segment: 0% to 33.33% (fills first third)
-        progressBarBlue.style.left = "0%";
-        progressBarBlue.style.width = `${Math.min(overallPercentage, ms1)}%`;
-
-        // Green segment: 33.33% to 66.67% (fills second third)
-        progressBarGreen.style.left = "0%";
-        if (overallPercentage > ms1) {
-          progressBarGreen.style.width = `${Math.min(overallPercentage, ms2)}%`;
-        } else {
-          progressBarGreen.style.width = "0%";
-        }
-
-        // Gold segment: 66.67% to 100% (fills final third)
-        progressBarGold.style.left = "0%";
-        if (overallPercentage > ms2) {
-          progressBarGold.style.width = `${Math.min(overallPercentage, ms3)}%`;
-        } else {
+        // Blue segment: 0% to 33.33% (first third)
+        if (overallPercentage <= ms1) {
+          progressBarBlue.style.left = "0%";
+          progressBarBlue.style.width = `${overallPercentage}%`;
+          progressBarOrange.style.width = "0%";
           progressBarGold.style.width = "0%";
+        }
+        // Orange segment: 33.33% to 66.67% (second third)
+        else if (overallPercentage <= ms2) {
+          progressBarBlue.style.left = "0%";
+          progressBarBlue.style.width = `${ms1}%`;
+          progressBarOrange.style.left = `${ms1}%`;
+          progressBarOrange.style.width = `${overallPercentage - ms1}%`;
+          progressBarGold.style.width = "0%";
+        }
+        // Gold segment: 66.67% to 100% (final third)
+        else {
+          progressBarBlue.style.left = "0%";
+          progressBarBlue.style.width = `${ms1}%`;
+          progressBarOrange.style.left = `${ms1}%`;
+          progressBarOrange.style.width = `${ms2 - ms1}%`;
+          progressBarGold.style.left = `${ms2}%`;
+          progressBarGold.style.width = `${overallPercentage - ms2}%`;
         }
       }
 
