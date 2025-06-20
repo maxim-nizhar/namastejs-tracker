@@ -27,6 +27,14 @@
         --accent-platinum-pin: #3730a3; /* Deep indigo for platinum pin */
         --accent-platinum-glow: #6d28d9; /* Purple glow for platinum */
         --accent-red: #ef4444; /* Tailwind red-500 */
+
+        /* Premium Tier Colors */
+        --tier-silver-primary: #22c55e; /* Glowing green for JS Silver */
+        --tier-silver-glass: rgba(34, 197, 94, 0.3); /* Glass green */
+        --tier-gold-primary: #eab308; /* Glowing gold for JS Gold */
+        --tier-gold-glass: rgba(234, 179, 8, 0.3); /* Glass gold */
+        --tier-platinum-primary: #a855f7; /* Glowing purple for AsyncJS Platinum */
+        --tier-platinum-glass: rgba(168, 85, 247, 0.3); /* Glass platinum */
       }
 
       html,
@@ -286,6 +294,41 @@
         box-shadow: 0 0 8px rgba(234, 179, 8, 0.6);
       }
 
+      /* Premium Tier Progress Bars */
+      .progress-bar-container.tier-silver #progress-bar-blue,
+      .progress-bar-container.tier-silver #progress-bar-orange,
+      .progress-bar-container.tier-silver #progress-bar-gold {
+        background: linear-gradient(90deg, var(--tier-silver-primary), #10b981);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.8),
+          0 0 40px rgba(34, 197, 94, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        animation: silverGlow 2s ease-in-out infinite alternate;
+      }
+
+      .progress-bar-container.tier-gold #progress-bar-blue,
+      .progress-bar-container.tier-gold #progress-bar-orange,
+      .progress-bar-container.tier-gold #progress-bar-gold {
+        background: linear-gradient(90deg, var(--tier-gold-primary), #f59e0b);
+        box-shadow: 0 0 20px rgba(234, 179, 8, 0.8),
+          0 0 40px rgba(234, 179, 8, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        animation: goldGlow 2s ease-in-out infinite alternate;
+      }
+
+      .progress-bar-container.tier-platinum #progress-bar-blue,
+      .progress-bar-container.tier-platinum #progress-bar-orange,
+      .progress-bar-container.tier-platinum #progress-bar-gold {
+        background: linear-gradient(
+          90deg,
+          var(--tier-platinum-primary),
+          #c084fc
+        );
+        box-shadow: 0 0 20px rgba(168, 85, 247, 0.8),
+          0 0 40px rgba(168, 85, 247, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        animation: platinumGlow 2s ease-in-out infinite alternate;
+      }
+
       #milestone-markers {
         position: absolute;
         top: 0;
@@ -436,6 +479,46 @@
         100% {
           filter: drop-shadow(0 0 2px rgba(109, 40, 217, 0.3));
           transform: translateX(-50%) scale(1);
+        }
+      }
+
+      /* Premium Tier Animations */
+      @keyframes silverGlow {
+        0% {
+          box-shadow: 0 0 20px rgba(34, 197, 94, 0.6),
+            0 0 40px rgba(34, 197, 94, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        100% {
+          box-shadow: 0 0 30px rgba(34, 197, 94, 1),
+            0 0 60px rgba(34, 197, 94, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+      }
+
+      @keyframes goldGlow {
+        0% {
+          box-shadow: 0 0 20px rgba(234, 179, 8, 0.6),
+            0 0 40px rgba(234, 179, 8, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+        100% {
+          box-shadow: 0 0 30px rgba(234, 179, 8, 1),
+            0 0 60px rgba(234, 179, 8, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+      }
+
+      @keyframes platinumGlow {
+        0% {
+          box-shadow: 0 0 20px rgba(168, 85, 247, 0.6),
+            0 0 40px rgba(168, 85, 247, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+        100% {
+          box-shadow: 0 0 30px rgba(168, 85, 247, 1),
+            0 0 60px rgba(168, 85, 247, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.7);
         }
       }
 
@@ -688,6 +771,89 @@
       }
       .delete-todo-btn:hover {
         color: var(--accent-red);
+      }
+
+      /* Glass-like Premium Milestone Effects */
+      .progress-bar-container.tier-silver .milestone.unlocked .icon-container {
+        color: var(--tier-silver-primary);
+        background: linear-gradient(
+          135deg,
+          var(--tier-silver-glass),
+          transparent
+        );
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        box-shadow: 0 8px 32px rgba(34, 197, 94, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+
+      .progress-bar-container.tier-silver .milestone.unlocked .milestone-label {
+        color: var(--tier-silver-primary);
+        background: linear-gradient(
+          135deg,
+          var(--tier-silver-glass),
+          rgba(0, 0, 0, 0.8)
+        );
+        border: 1px solid var(--tier-silver-primary);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2);
+      }
+
+      .progress-bar-container.tier-gold .milestone.unlocked .icon-container {
+        color: var(--tier-gold-primary);
+        background: linear-gradient(
+          135deg,
+          var(--tier-gold-glass),
+          transparent
+        );
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(234, 179, 8, 0.3);
+        border-radius: 8px;
+        box-shadow: 0 8px 32px rgba(234, 179, 8, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      }
+
+      .progress-bar-container.tier-gold .milestone.unlocked .milestone-label {
+        color: var(--tier-gold-primary);
+        background: linear-gradient(
+          135deg,
+          var(--tier-gold-glass),
+          rgba(0, 0, 0, 0.8)
+        );
+        border: 1px solid var(--tier-gold-primary);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(234, 179, 8, 0.2);
+      }
+
+      .progress-bar-container.tier-platinum
+        .milestone.unlocked
+        .icon-container {
+        color: var(--tier-platinum-primary);
+        background: linear-gradient(
+          135deg,
+          var(--tier-platinum-glass),
+          transparent
+        );
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        border-radius: 8px;
+        box-shadow: 0 8px 32px rgba(168, 85, 247, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+
+      .progress-bar-container.tier-platinum
+        .milestone.unlocked
+        .milestone-label {
+        color: var(--tier-platinum-primary);
+        background: linear-gradient(
+          135deg,
+          var(--tier-platinum-glass),
+          rgba(0, 0, 0, 0.8)
+        );
+        border: 1px solid var(--tier-platinum-primary);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(168, 85, 247, 0.2);
       }
     </style>
   </head>
@@ -1130,6 +1296,27 @@
 
         // --- Update Segmented Progress Bar ---
         const [ms1, ms2, ms3] = [33.33, 66.67, 100];
+
+        // Determine highest achieved tier
+        const progressBarContainer = document.querySelector(
+          ".progress-bar-container"
+        );
+        progressBarContainer.classList.remove(
+          "tier-silver",
+          "tier-gold",
+          "tier-platinum"
+        );
+
+        if (overallPercentage >= ms3) {
+          // AsyncJS Platinum achieved
+          progressBarContainer.classList.add("tier-platinum");
+        } else if (overallPercentage >= ms2) {
+          // JS Gold achieved
+          progressBarContainer.classList.add("tier-gold");
+        } else if (overallPercentage >= ms1) {
+          // JS Silver achieved
+          progressBarContainer.classList.add("tier-silver");
+        }
 
         // Blue segment: 0% to 33.33% (first third)
         if (overallPercentage <= ms1) {
