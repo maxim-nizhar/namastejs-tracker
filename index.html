@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Namaste JavaScript Progress Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-dark: #030712; /* Tailwind gray-950 */
+        --card-dark: #1f2937; /* Tailwind gray-800 */
+        --card-light: #374151; /* Tailwind gray-700 */
+        --border-dark: #374151; /* Tailwind gray-700 */
+        --text-main: #f9fafb; /* Tailwind gray-50 */
+        --text-secondary: #9ca3af; /* Tailwind gray-400 */
+        --accent-blue: #3b82f6; /* Tailwind blue-500 */
+        --accent-green: #22c55e; /* Tailwind green-500 */
+        --accent-gold: #f59e0b; /* Tailwind amber-500 */
+        --accent-silver-to-gold: #fbbf24; /* Different orange for silver-to-gold path */
+        --accent-platinum: #c7d2fe; /* Lighter platinum blue */
+        --accent-platinum-pin: #8b5cf6; /* Purple-blue for platinum pin */
+        --accent-red: #ef4444; /* Tailwind red-500 */
+      }
+
+      html,
+      body {
+        height: 100%;
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100vw;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        box-sizing: border-box;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      /* --- Main Layout & Header --- */
+      .task-item {
+        background-color: var(--card-dark);
+        border: 1px solid var(--border-dark);
+        border-radius: 0.75rem;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        margin-bottom: 1rem;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .item-header {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      @media (max-width: 640px) {
+        .task-item {
+          margin-bottom: 0.75rem;
+        }
+        .item-header {
+          padding: 0.5rem 0.75rem;
+          gap: 0.375rem;
+        }
+      }
+
+      .toggle-icon {
+        color: var(--text-secondary);
+        transition: transform 0.3s ease;
+        flex-shrink: 0;
+      }
+      .is-unfolded .toggle-icon {
+        transform: rotate(90deg);
+      }
+
+      /* --- Circular Progress Indicator --- */
+      .progress-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: conic-gradient(var(--accent-blue) 0deg, #374151 0deg);
+        transition: background 0.4s ease-out;
+        flex-shrink: 0;
+        margin: 0 0.5rem 0 0.25rem;
+      }
+      .progress-circle-inner {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--card-dark);
+        display: grid;
+        place-items: center;
+        font-weight: 600;
+        font-size: 0.65rem;
+        color: var(--text-secondary);
+      }
+      .progress-circle-inner .checkmark {
+        color: var(--accent-green);
+        width: 1rem;
+        height: 1rem;
+      }
+
+      @media (max-width: 640px) {
+        .progress-circle {
+          width: 28px;
+          height: 28px;
+          margin: 0 0.375rem 0 0.125rem;
+        }
+        .progress-circle-inner {
+          width: 22px;
+          height: 22px;
+          font-size: 0.6rem;
+        }
+        .progress-circle-inner .checkmark {
+          width: 0.875rem;
+          height: 0.875rem;
+        }
+      }
+
+      /* --- Subtasks --- */
+      .subtasks-container {
+        max-height: 0;
+        transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      .is-unfolded .subtasks-container {
+        max-height: 200px;
+        padding-bottom: 1rem;
+      }
+      .subtasks-content {
+        padding-left: 2.25rem;
+        border-left: 2px solid var(--border-dark);
+      }
+      .subtask-label {
+        background-color: transparent;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+      }
+      .subtask-label:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+      .subtask-label.checked .subtask-text {
+        text-decoration: line-through;
+        color: var(--text-secondary);
+      }
+
+      @media (max-width: 640px) {
+        .subtasks-container {
+          padding-left: 0.75rem;
+          padding-right: 0.75rem;
+        }
+        .subtasks-content {
+          padding-left: 1.75rem;
+        }
+        .subtask-label {
+          padding: 0.375rem 0.5rem;
+        }
+      }
+
+      /* --- General UI --- */
+      .custom-checkbox {
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--border-dark);
+        border-radius: 0.375rem;
+        margin-right: 0.75rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+        background-color: var(--bg-dark);
+        transition: all 0.2s ease-in-out;
+      }
+      .checked .custom-checkbox,
+      .subtask-label.checked .custom-checkbox {
+        background-color: var(--accent-blue);
+        border-color: var(--accent-blue);
+      }
+      .checkmark-white {
+        color: white;
+        width: 12px;
+        height: 12px;
+      }
+
+      .control-button {
+        color: var(--text-secondary);
+        background-color: transparent;
+        border: 1px solid var(--border-dark);
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+      }
+      .control-button:hover {
+        color: var(--text-main);
+        border-color: var(--text-secondary);
+      }
+
+      @media (max-width: 640px) {
+        .control-button {
+          padding: 0.25rem 0.375rem;
+          font-size: 0.75rem;
+          gap: 0.25rem;
+        }
+      }
+      #status-indicator {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        transition: opacity 0.3s ease-in-out;
+        opacity: 0;
+      }
+
+      /* --- Gamification: Progress Bar & Milestones --- */
+      .progress-section {
+        padding-bottom: 1.5rem;
+      }
+      .progress-bar-container {
+        position: relative;
+        margin-top: 4rem;
+        padding: 0 1rem;
+        width: 100%;
+        max-width: 100%;
+        overflow: visible;
+      }
+      .global-progress-bar-bg {
+        position: relative;
+        background-color: var(--border-dark);
+        border-radius: 9999px;
+        height: 8px;
+        width: 100%;
+        overflow: hidden;
+      }
+      .progress-bar-segment {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 0%;
+        border-radius: 9999px;
+        transition: width 0.4s ease-out;
+      }
+      #progress-bar-blue {
+        background-color: var(--accent-blue);
+        z-index: 1;
+      }
+      #progress-bar-green {
+        background-color: var(--accent-silver-to-gold);
+        z-index: 2;
+      }
+      #progress-bar-gold {
+        background-color: var(--accent-gold);
+        z-index: 3;
+      }
+
+      #milestone-markers {
+        position: absolute;
+        top: 0;
+        left: 1rem;
+        right: 1rem;
+        height: 100%;
+        width: calc(100% - 2rem);
+        max-width: calc(100% - 2rem);
+      }
+      .milestone {
+        position: absolute;
+        width: 20px;
+        height: 28px; /* Pin dimensions */
+        top: -24px; /* Position above the bar */
+        transform: translateX(-50%);
+        transition: all 0.4s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 10;
+      }
+      .milestone .icon-container {
+        width: 20px;
+        height: 28px;
+        color: var(--accent-red);
+      }
+      .milestone-label {
+        position: absolute;
+        top: -40px;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(4px);
+        transform: translateX(-50%);
+        left: 50%;
+        min-width: max-content;
+        z-index: 20;
+      }
+
+      /* Special positioning for the last milestone to prevent cutoff */
+      .milestone:last-child .milestone-label {
+        transform: translateX(-100%);
+        left: 100%;
+      }
+      .milestone-label .check-icon {
+        width: 12px;
+        height: 12px;
+      }
+      .milestone.unlocked .milestone-label {
+        color: var(--accent-green);
+        background-color: rgba(34, 197, 94, 0.1);
+        border: 1px solid var(--accent-green);
+      }
+      .milestone.platinum.unlocked .milestone-label {
+        color: var(--accent-platinum);
+        background-color: rgba(139, 92, 246, 0.1);
+        border: 1px solid var(--accent-platinum-pin);
+      }
+
+      @keyframes glow {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0));
+        }
+        50% {
+          filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.7));
+        }
+      }
+      @keyframes glow-platinum {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 3px rgba(165, 180, 252, 0));
+        }
+        50% {
+          filter: drop-shadow(0 0 4px rgba(165, 180, 252, 0.7));
+        }
+      }
+
+      .milestone.next-milestone .icon-container {
+        color: var(--accent-gold);
+      }
+      .milestone.next-milestone {
+        animation: glow 2s infinite ease-in-out;
+      }
+
+      .milestone.platinum.next-milestone .icon-container {
+        color: var(--accent-platinum-pin);
+      }
+      .milestone.platinum.next-milestone {
+        animation: glow-platinum 2s infinite ease-in-out;
+      }
+
+      /* Responsive milestone positioning */
+      @media (max-width: 640px) {
+        .milestone {
+          width: 16px;
+          height: 24px;
+          top: -20px;
+        }
+        .milestone .icon-container {
+          width: 16px;
+          height: 24px;
+        }
+        .milestone-label {
+          top: -44px;
+          font-size: 0.65rem;
+          padding: 0.125rem 0.375rem;
+        }
+        .milestone-label .check-icon {
+          width: 10px;
+          height: 10px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .milestone-label {
+          font-size: 0.6rem;
+          padding: 0.1rem 0.3rem;
+        }
+      }
+
+      /* --- Custom Modal --- */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+        z-index: 100;
+      }
+      .modal-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+      .modal-content {
+        background: var(--card-dark);
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        border: 1px solid var(--border-dark);
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+        margin: 1rem;
+      }
+      .modal-overlay.visible .modal-content {
+        transform: scale(1);
+      }
+      .modal-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+      }
+      .modal-button {
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-width: 80px;
+      }
+
+      @media (max-width: 640px) {
+        .modal-content {
+          padding: 1rem;
+          margin: 0.5rem;
+        }
+        .modal-buttons {
+          gap: 0.5rem;
+          margin-top: 1rem;
+        }
+        .modal-button {
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+        }
+      }
+      #modal-confirm-btn {
+        background-color: var(--accent-red);
+        color: white;
+      }
+      #modal-confirm-btn:hover:not(:disabled) {
+        opacity: 0.8;
+      }
+      #modal-confirm-btn:disabled {
+        background-color: #991b1b;
+        cursor: not-allowed;
+      }
+      #modal-cancel-btn {
+        background-color: var(--border-dark);
+        color: var(--text-main);
+      }
+      #modal-cancel-btn:hover {
+        background-color: #4b5563;
+      }
+      #reset-input {
+        background-color: var(--card-light);
+        border: 1px solid var(--border-dark);
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+        width: 100%;
+        text-align: center;
+        margin-top: 1rem;
+        color: var(--text-main);
+      }
+
+      /* --- Root and Layout --- */
+      #app-root {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+      }
+      main#checklist-container {
+        display: flex;
+        gap: 1rem;
+        flex-grow: 1;
+        min-height: 0;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      .checklist-column {
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      /* --- Notepad Panel --- */
+      #todo-panel-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.4s ease;
+        z-index: 40;
+      }
+      #todo-panel-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+      #todo-panel {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        max-width: 400px;
+        width: 90%;
+        height: 100%;
+        background-color: var(--bg-dark);
+        z-index: 50;
+        transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid var(--border-dark);
+      }
+      #todo-panel.open {
+        right: 0;
+      }
+
+      @media (max-width: 640px) {
+        #todo-panel {
+          width: 100%;
+          max-width: 100%;
+        }
+      }
+
+      #todo-input {
+        background-color: var(--card-dark);
+        border: 1px solid var(--border-dark);
+      }
+      #todo-list-container .todo-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background-color: var(--card-dark);
+        border-radius: 0.5rem;
+        transition: background-color 0.2s ease;
+      }
+      #todo-list-container .todo-item:hover {
+        background-color: var(--card-light);
+      }
+      .delete-todo-btn {
+        margin-left: auto;
+        color: var(--text-secondary);
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .delete-todo-btn:hover {
+        color: var(--accent-red);
+      }
+    </style>
+  </head>
+  <body class="p-2 sm:p-4 md:p-6 lg:p-8">
+    <div id="app-root">
+      <div class="app-header max-w-screen-2xl mx-auto w-full px-2">
+        <header
+          class="flex justify-between items-center flex-wrap gap-2 sm:gap-4 mb-6"
+        >
+          <h1
+            class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-50 break-words"
+          >
+            Namaste JavaScript Tracker
+          </h1>
+          <div class="flex items-center gap-1 sm:gap-2 flex-wrap">
+            <button
+              id="todo-panel-button"
+              class="control-button text-xs sm:text-sm"
+            >
+              Notepad
+            </button>
+            <button
+              id="toggle-fold-button"
+              class="control-button text-xs sm:text-sm"
+            >
+              Toggle All
+            </button>
+            <button id="reset-button" class="control-button text-xs sm:text-sm">
+              Reset
+            </button>
+          </div>
+        </header>
+
+        <div class="progress-section mb-4">
+          <div class="progress-bar-container">
+            <div class="global-progress-bar-bg">
+              <div id="progress-bar-gold" class="progress-bar-segment"></div>
+              <div id="progress-bar-green" class="progress-bar-segment"></div>
+              <div id="progress-bar-blue" class="progress-bar-segment"></div>
+            </div>
+            <div id="milestone-markers"></div>
+          </div>
+          <div
+            class="text-xs sm:text-sm font-medium text-gray-400 mt-2 text-center break-words"
+          >
+            <span id="progress-text">Overall Progress:</span>
+            <span
+              id="progress-fraction"
+              class="font-semibold text-gray-200 ml-1 sm:ml-2"
+            ></span>
+            <span id="progress-percentage" class="text-gray-500 ml-1"></span>
+          </div>
+        </div>
+      </div>
+
+      <main id="checklist-container" class="max-w-screen-2xl mx-auto w-full">
+        <p id="status-indicator" class="text-center">Loading...</p>
+      </main>
+    </div>
+
+    <div id="todo-panel-overlay"></div>
+    <aside id="todo-panel">
+      <div
+        class="p-4 border-b border-b-gray-700 flex justify-between items-center flex-shrink-0"
+      >
+        <h2 class="text-xl font-bold">My Notepad</h2>
+        <button
+          id="close-todo-panel"
+          class="text-gray-400 hover:text-white text-2xl leading-none"
+        >
+          &times;
+        </button>
+      </div>
+      <div class="p-4 flex-grow overflow-y-auto">
+        <div id="todo-list-container"></div>
+      </div>
+      <div class="p-4 border-t border-t-gray-700 flex-shrink-0">
+        <div class="flex gap-2">
+          <textarea
+            id="todo-input"
+            class="w-full bg-gray-800 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none h-40 resize-none"
+            placeholder="Add a new note..."
+          ></textarea>
+          <button
+            id="add-todo-btn"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md self-start"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Reset Confirmation Modal HTML -->
+    <div id="reset-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h3 class="text-xl font-bold">Reset Progress?</h3>
+        <p class="text-gray-400 mt-2">
+          This action cannot be undone. To confirm, please type
+          <strong>reset</strong> into the box below.
+        </p>
+        <input type="text" id="reset-input" placeholder="type 'reset' here" />
+        <div class="modal-buttons">
+          <button id="modal-cancel-btn" class="modal-button">Cancel</button>
+          <button id="modal-confirm-btn" class="modal-button" disabled>
+            Confirm Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- JSONBIN.IO CONFIGURATION ---
+      const JSONBIN_BIN_ID = "684ef7bd8960c979a5aa5f67";
+      const JSONBIN_API_KEY =
+        "$2a$10$jGHmTWYmL/IqNj8GRZo7TOqMzk5nwncne90IS6RcE6DI0aZ7K2oKG";
+      const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
+      // --- DATA STRUCTURE & ICONS ---
+      const episodesTemplate = [
+        {
+          id: 1,
+          title:
+            "How JavaScript Works ✨ & Execution Context | Namaste JavaScript Ep 1",
+        },
+        {
+          id: 2,
+          title:
+            "How JavaScript Code is executed? ❤️ & Call Stack | Namaste JavaScript Ep 2",
+        },
+        {
+          id: 3,
+          title:
+            "Hoisting in JavaScript 🔥 (variables & functions) | Namaste JavaScript Ep. 3",
+        },
+        {
+          id: 4,
+          title:
+            "How functions work in JS ❤️ & Variable Environment | Namaste JavaScript Ep. 4",
+        },
+        {
+          id: 5,
+          title:
+            "SHORTEST JS Program 🔥 window & this keyword | Namaste JavaScript Ep. 5",
+        },
+        {
+          id: 6,
+          title: "undefined vs not defined in JS 🤔 | Namaste JavaScript Ep. 6",
+        },
+        {
+          id: 7,
+          title:
+            "The Scope Chain, 🔥 Scope & Lexical Environment | Namaste JavaScript Ep. 7",
+        },
+        {
+          id: 8,
+          title:
+            "let & const in JS 🔥 Temporal Dead Zone | Namaste JavaScript Ep. 8",
+        },
+        {
+          id: 9,
+          title: "BLOCK SCOPE & Shadowing in JS � | Namaste JavaScript Ep. 9",
+        },
+        { id: 10, title: "Closures in JS 🔥 | Namaste JavaScript Episode 10" },
+        {
+          id: 11,
+          title:
+            "setTimeout + Closures Interview Question 🔥 | Namaste JavaScript Ep. 11",
+        },
+        {
+          id: 12,
+          title:
+            "CRAZY JS INTERVIEW 🤯 ft. Closures | Namaste JavaScript Ep. 12",
+        },
+        {
+          id: 13,
+          title:
+            "FIRST CLASS FUNCTIONS 🔥 ft. Anonymous Functions | Namaste JavaScript Ep 13",
+        },
+        {
+          id: 14,
+          title:
+            "Callback Functions in JS ft. Event Listeners 🙏 | Namaste JavaScript Ep. 14",
+        },
+        {
+          id: 15,
+          title:
+            "Asynchronous JavaScript & EVENT LOOP from scratch 🔥 | Namaste JavaScript Ep 15",
+        },
+        {
+          id: 16,
+          title:
+            "JS Engine EXPOSED 🔥 Google's V8 Architecture 🚀 | Namaste JavaScript Ep 16",
+        },
+        {
+          id: 17,
+          title: "TRUST ISSUES with setTimeout() | Namaste JavaScript Ep.17",
+        },
+        {
+          id: 18,
+          title:
+            "Higher-Order Functions ft. Functional Programming | Namaste JavaScript Ep. 18",
+        },
+        {
+          id: 19,
+          title: "map, filter & reduce 🙏 Namaste JavaScript Ep. 19 🔥",
+        },
+      ];
+      const subTasksTemplate = [
+        { id: 1, text: "Read my note" },
+        { id: 2, text: "Inserted my note + Alok's note into anki" },
+      ];
+      let appData = { checklist: [], todos: [] };
+
+      const ICONS = {
+        checkmarkGreen: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="checkmark"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`,
+        checkmarkWhite: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="checkmark-white"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`,
+        chevron: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="toggle-icon w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>`,
+        trash: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>`,
+        mapPin: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="currentColor"><path d="M172.268 501.67C26.97 291.031 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67a24 24 0 01-35.464 0zM192 272a80 80 0 100-160 80 80 0 000 160z"/></svg>`,
+        checkbox: `<svg xmlns="http://www.w3.org/2000/svg" class="check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`,
+        lock: `<svg xmlns="http://www.w3.org/2000/svg" class="check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>`,
+      };
+
+      const MILESTONES = [
+        { name: "JS Silver", percent: 33.33 },
+        { name: "JS Gold", percent: 66.67 },
+        { name: "AsyncJS Platinum", percent: 100 },
+      ];
+
+      // --- DOM ELEMENTS ---
+      const getEl = (id) => document.getElementById(id);
+      const checklistContainer = getEl("checklist-container");
+      const modal = getEl("reset-modal");
+      const resetButton = getEl("reset-button");
+      const confirmResetBtn = getEl("modal-confirm-btn");
+      const cancelResetBtn = getEl("modal-cancel-btn");
+      const resetInput = getEl("reset-input");
+      const toggleFoldBtn = getEl("toggle-fold-button");
+      const statusIndicator = getEl("status-indicator");
+      const progressFractionEl = getEl("progress-fraction");
+      const progressPercentageEl = getEl("progress-percentage");
+
+      const progressBarBlue = getEl("progress-bar-blue");
+      const progressBarGreen = getEl("progress-bar-green");
+      const progressBarGold = getEl("progress-bar-gold");
+
+      const milestoneMarkersContainer = getEl("milestone-markers");
+      const todoPanel = getEl("todo-panel");
+      const todoPanelOverlay = getEl("todo-panel-overlay");
+      const todoPanelBtn = getEl("todo-panel-button");
+      const closeTodoPanelBtn = getEl("close-todo-panel");
+      const todoListContainer = getEl("todo-list-container");
+      const addTodoBtn = getEl("add-todo-btn");
+      const todoInput = getEl("todo-input");
+
+      // --- RENDER FUNCTIONS ---
+      function renderEpisode(episode) {
+        const subtaskContent = episode.subtasks
+          .map(
+            (subtask) => `
+                <div class="mt-2">
+                    <label class="subtask-label ${
+                      subtask.completed ? "checked" : ""
+                    }" data-episode-id="${episode.id}" data-subtask-id="${
+              subtask.id
+            }">
+                         <div class="custom-checkbox">${
+                           subtask.completed ? ICONS.checkmarkWhite : ""
+                         }</div>
+                        <span class="subtask-text text-gray-300">${
+                          subtask.text
+                        }</span>
+                    </label>
+                </div>`
+          )
+          .join("");
+
+        const card = document.createElement("div");
+        card.className = `task-item ${episode.isUnfolded ? "is-unfolded" : ""}`;
+        card.id = `episode-${episode.id}`;
+        card.dataset.episodeId = episode.id;
+        card.innerHTML = `
+                <div class="item-header">
+                    ${ICONS.chevron}
+                    <div class="progress-circle" data-episode-id="${episode.id}"><div class="progress-circle-inner"></div></div>
+                    <h2 class="text-sm sm:text-base font-medium text-gray-100 flex-grow min-w-0 break-words">${episode.title}</h2>
+                </div>
+                <div class="subtasks-container"><div class="subtasks-content">${subtaskContent}</div></div>
+            `;
+        return card;
+      }
+
+      function renderChecklist() {
+        if (!checklistContainer) return;
+        checklistContainer.innerHTML = "";
+
+        const containerWidth = checklistContainer.offsetWidth;
+        // Adjust column width and count based on screen size
+        const isSmallScreen = window.innerWidth < 640;
+        const isMediumScreen = window.innerWidth < 1024;
+
+        let colWidth, numColumns;
+        if (isSmallScreen) {
+          colWidth = Math.max(300, containerWidth - 32); // Single column on mobile
+          numColumns = 1;
+        } else if (isMediumScreen) {
+          colWidth = 380;
+          numColumns = Math.max(1, Math.floor(containerWidth / colWidth));
+        } else {
+          colWidth = 420;
+          numColumns = Math.max(1, Math.floor(containerWidth / colWidth));
+        }
+
+        const columns = Array.from({ length: numColumns }, () => {
+          const column = document.createElement("div");
+          column.className = "checklist-column";
+          checklistContainer.appendChild(column);
+          return column;
+        });
+
+        appData.checklist.forEach((episode, index) => {
+          columns[index % numColumns].appendChild(renderEpisode(episode));
+        });
+
+        syncAllItemsState();
+      }
+
+      function renderMilestones() {
+        milestoneMarkersContainer.innerHTML = "";
+        const positions = [33.33, 66.67, 100]; // Exact thirds
+        MILESTONES.forEach((ms, index) => {
+          const marker = document.createElement("div");
+          marker.className = "milestone";
+          if (ms.name === "AsyncJS Platinum") marker.classList.add("platinum");
+          marker.id = `milestone-${Math.round(positions[index])}`;
+          marker.style.left = `${positions[index]}%`;
+          marker.innerHTML = `
+                    <div class="milestone-label">
+                        <span class="check-icon">${ICONS.lock}</span>
+                        <span>${ms.name}</span>
+                    </div>
+                    <div class="icon-container">${ICONS.mapPin}</div>
+                `;
+          milestoneMarkersContainer.appendChild(marker);
+        });
+      }
+
+      function syncAllItemsState() {
+        appData.checklist.forEach((episode) => {
+          const taskItem = getEl(`episode-${episode.id}`);
+          if (taskItem)
+            taskItem.classList.toggle("is-unfolded", episode.isUnfolded);
+          updateMainStatus(episode.id);
+        });
+        updateOverallProgress();
+      }
+
+      // --- CORE LOGIC ---
+      function updateMainStatus(episodeId) {
+        const episode = appData.checklist.find((e) => e.id === episodeId);
+        const progressCircles = document.querySelectorAll(
+          `.progress-circle[data-episode-id="${episodeId}"]`
+        );
+        if (!episode || progressCircles.length === 0) return;
+
+        const completedCount = episode.subtasks.filter(
+          (st) => st.completed
+        ).length;
+        const percentage =
+          episode.subtasks.length > 0
+            ? Math.round((completedCount / episode.subtasks.length) * 100)
+            : 0;
+
+        progressCircles.forEach((circle) => {
+          const progressText = circle.querySelector(".progress-circle-inner");
+          circle.style.background = `conic-gradient(var(--accent-blue) ${
+            percentage * 3.6
+          }deg, #374151 0deg)`;
+          if (progressText)
+            progressText.innerHTML =
+              percentage === 100
+                ? ICONS.checkmarkGreen
+                : `${percentage}<span style="font-size:0.6rem;">%</span>`;
+        });
+      }
+
+      function updateOverallProgress() {
+        let totalSubtasks = 0,
+          completedSubtasks = 0;
+        appData.checklist.forEach((episode) => {
+          totalSubtasks += episode.subtasks.length;
+          completedSubtasks += episode.subtasks.filter(
+            (st) => st.completed
+          ).length;
+        });
+        const completedEpisodesSum =
+          completedSubtasks / (totalSubtasks / appData.checklist.length || 1);
+
+        const overallPercentage =
+          totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
+
+        progressFractionEl.textContent = `${completedEpisodesSum.toFixed(
+          1
+        )} / ${appData.checklist.length}`;
+        progressPercentageEl.textContent = `(${Math.round(
+          overallPercentage
+        )}%)`;
+
+        // --- Update Milestone Visuals ---
+        let nextMilestoneFound = false;
+        const milestonePositions = [33.33, 66.67, 100];
+        MILESTONES.forEach((ms, index) => {
+          const marker = getEl(
+            `milestone-${Math.round(milestonePositions[index])}`
+          );
+          if (!marker) return;
+
+          marker.classList.remove("unlocked", "next-milestone");
+          const checkIconContainer = marker.querySelector(".check-icon");
+
+          if (overallPercentage >= milestonePositions[index]) {
+            marker.classList.add("unlocked");
+            checkIconContainer.innerHTML = ICONS.checkbox;
+          } else {
+            checkIconContainer.innerHTML = ICONS.lock;
+            if (!nextMilestoneFound) {
+              marker.classList.add("next-milestone");
+              nextMilestoneFound = true;
+            }
+          }
+        });
+
+        // --- Update Segmented Progress Bar ---
+        const [ms1, ms2, ms3] = [33.33, 66.67, 100];
+
+        // Blue segment: 0% to 33.33% (fills first third)
+        progressBarBlue.style.left = "0%";
+        progressBarBlue.style.width = `${Math.min(overallPercentage, ms1)}%`;
+
+        // Green segment: 33.33% to 66.67% (fills second third)
+        progressBarGreen.style.left = "0%";
+        if (overallPercentage > ms1) {
+          progressBarGreen.style.width = `${Math.min(overallPercentage, ms2)}%`;
+        } else {
+          progressBarGreen.style.width = "0%";
+        }
+
+        // Gold segment: 66.67% to 100% (fills final third)
+        progressBarGold.style.left = "0%";
+        if (overallPercentage > ms2) {
+          progressBarGold.style.width = `${Math.min(overallPercentage, ms3)}%`;
+        } else {
+          progressBarGold.style.width = "0%";
+        }
+      }
+
+      // --- TO-DO LIST (NOTEPAD) ---
+      function renderTodos() {
+        if (!todoListContainer) return;
+        if (!appData.todos || appData.todos.length === 0) {
+          todoListContainer.innerHTML = `<p class="text-gray-500 text-center mt-8">No notes yet. Add one below!</p>`;
+          return;
+        }
+        todoListContainer.innerHTML = appData.todos
+          .map(
+            (todo) => `
+                <div class="todo-item ${
+                  todo.completed ? "checked" : ""
+                }" data-todo-id="${todo.id}">
+                    <div class="custom-checkbox self-start mt-1">${
+                      todo.completed ? ICONS.checkmarkWhite : ""
+                    }</div>
+                    <span class="subtask-text flex-grow whitespace-pre-wrap ${
+                      todo.completed
+                        ? "line-through text-gray-500"
+                        : "text-gray-200"
+                    }">${todo.text}</span>
+                    <button class="delete-todo-btn self-start">${
+                      ICONS.trash
+                    }</button>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function addTodo() {
+        const text = todoInput.value.trim();
+        if (text) {
+          if (!appData.todos) appData.todos = [];
+          appData.todos.unshift({
+            id: Date.now(),
+            text: text,
+            completed: false,
+          });
+          todoInput.value = "";
+          renderTodos();
+          debouncedSaveProgress();
+        }
+      }
+
+      function handleTodoInteraction(e) {
+        const todoItem = e.target.closest(".todo-item");
+        if (!todoItem) return;
+
+        const todoId = Number(todoItem.dataset.todoId);
+        const todo = appData.todos.find((t) => t.id === todoId);
+        if (!todo) return;
+
+        if (e.target.closest(".delete-todo-btn")) {
+          appData.todos = appData.todos.filter((t) => t.id !== todoId);
+        } else {
+          todo.completed = !todo.completed;
+        }
+        renderTodos();
+        debouncedSaveProgress();
+      }
+
+      // --- DATA & EVENT HANDLERS ---
+      let saveTimeout;
+      function debouncedSaveProgress() {
+        if (statusIndicator) {
+          statusIndicator.textContent = "Saving...";
+          statusIndicator.style.opacity = 1;
+        }
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(async () => {
+          try {
+            await fetch(JSONBIN_URL, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": JSONBIN_API_KEY,
+              },
+              body: JSON.stringify({
+                checklist: appData.checklist,
+                todos: appData.todos,
+              }),
+            });
+            if (statusIndicator) statusIndicator.textContent = "Saved!";
+          } catch (e) {
+            if (statusIndicator) statusIndicator.textContent = "Save failed";
+          } finally {
+            if (statusIndicator)
+              setTimeout(() => {
+                statusIndicator.style.opacity = 0;
+              }, 1500);
+          }
+        }, 800);
+      }
+
+      async function loadProgress() {
+        if (statusIndicator) {
+          statusIndicator.textContent = "Loading...";
+          statusIndicator.style.opacity = 1;
+        }
+        const defaultData = {
+          checklist: episodesTemplate.map((ep) => ({
+            ...ep,
+            isUnfolded: false,
+            subtasks: subTasksTemplate.map((st) => ({
+              ...st,
+              completed: false,
+            })),
+          })),
+          todos: [],
+        };
+        try {
+          const response = await fetch(`${JSONBIN_URL}/latest`, {
+            headers: { "X-Master-Key": JSONBIN_API_KEY },
+          });
+          if (!response.ok)
+            throw new Error(`HTTP error! status: ${response.status}`);
+          const data = (await response.json()).record;
+
+          if (data && data.checklist) {
+            appData = { ...defaultData, ...data };
+          } else {
+            appData = defaultData;
+          }
+        } catch (e) {
+          appData = defaultData;
+        } finally {
+          if (statusIndicator)
+            setTimeout(() => {
+              statusIndicator.style.opacity = 0;
+            }, 500);
+        }
+      }
+
+      function handleChecklistInteraction(event) {
+        const header = event.target.closest(".item-header");
+        const label = event.target.closest(".subtask-label");
+
+        if (header) {
+          const episodeId = parseInt(
+            header.closest(".task-item").dataset.episodeId,
+            10
+          );
+          const episode = appData.checklist.find((ep) => ep.id === episodeId);
+          if (episode) {
+            episode.isUnfolded = !episode.isUnfolded;
+            header.closest(".task-item").classList.toggle("is-unfolded");
+            debouncedSaveProgress();
+          }
+          return;
+        }
+
+        if (label) {
+          const episodeId = parseInt(label.dataset.episodeId, 10);
+          const subtaskId = parseInt(label.dataset.subtaskId, 10);
+          const episode = appData.checklist.find((ep) => ep.id === episodeId);
+          const subtask = episode?.subtasks.find((st) => st.id === subtaskId);
+
+          if (subtask) {
+            subtask.completed = !subtask.completed;
+            label.classList.toggle("checked", subtask.completed);
+            label.querySelector(".custom-checkbox").innerHTML =
+              subtask.completed ? ICONS.checkmarkWhite : "";
+            updateMainStatus(episodeId);
+            updateOverallProgress();
+            debouncedSaveProgress();
+          }
+        }
+      }
+
+      async function resetProgress() {
+        if (statusIndicator) {
+          statusIndicator.textContent = "Resetting...";
+          statusIndicator.style.opacity = 1;
+        }
+        try {
+          appData.checklist = episodesTemplate.map((ep) => ({
+            ...ep,
+            isUnfolded: false,
+            subtasks: subTasksTemplate.map((st) => ({
+              ...st,
+              completed: false,
+            })),
+          }));
+          appData.todos = [];
+          await debouncedSaveProgress();
+          renderChecklist();
+          renderTodos();
+          if (statusIndicator)
+            statusIndicator.textContent = "Reset Successful!";
+        } catch (e) {
+          if (statusIndicator) statusIndicator.textContent = "Reset failed!";
+        } finally {
+          if (statusIndicator)
+            setTimeout(() => {
+              statusIndicator.style.opacity = 0;
+            }, 1500);
+        }
+      }
+
+      function handleToggleAllFold() {
+        const unfoldedCount = appData.checklist.filter(
+          (ep) => ep.isUnfolded
+        ).length;
+        const shouldUnfold = unfoldedCount < appData.checklist.length / 2;
+        appData.checklist.forEach((ep) => (ep.isUnfolded = shouldUnfold));
+        renderChecklist();
+        debouncedSaveProgress();
+      }
+
+      function toggleTodoPanel(visible) {
+        if (visible) {
+          todoPanel.classList.add("open");
+          todoPanelOverlay.classList.add("visible");
+        } else {
+          todoPanel.classList.remove("open");
+          todoPanelOverlay.classList.remove("visible");
+        }
+      }
+
+      function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      }
+
+      async function init() {
+        await loadProgress();
+        renderMilestones();
+        renderChecklist();
+        renderTodos();
+
+        const debouncedRender = debounce(renderChecklist, 150);
+        window.addEventListener("resize", debouncedRender);
+
+        checklistContainer.addEventListener(
+          "click",
+          handleChecklistInteraction
+        );
+        resetButton.addEventListener("click", () => {
+          resetInput.value = "";
+          confirmResetBtn.disabled = true;
+          modal.classList.add("visible");
+        });
+        cancelResetBtn.addEventListener("click", () =>
+          modal.classList.remove("visible")
+        );
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) modal.classList.remove("visible");
+        });
+
+        resetInput.addEventListener("input", () => {
+          confirmResetBtn.disabled = resetInput.value.toLowerCase() !== "reset";
+        });
+
+        confirmResetBtn.addEventListener("click", () => {
+          if (resetInput.value.toLowerCase() === "reset") {
+            modal.classList.remove("visible");
+            resetProgress();
+          }
+        });
+
+        toggleFoldBtn.addEventListener("click", handleToggleAllFold);
+        todoPanelBtn.addEventListener("click", () => toggleTodoPanel(true));
+        closeTodoPanelBtn.addEventListener("click", () =>
+          toggleTodoPanel(false)
+        );
+        todoPanelOverlay.addEventListener("click", () =>
+          toggleTodoPanel(false)
+        );
+        addTodoBtn.addEventListener("click", addTodo);
+        todoListContainer.addEventListener("click", handleTodoInteraction);
+      }
+
+      init();
+    </script>
+  </body>
+</html>
